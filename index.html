@@ -18,8 +18,7 @@ h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minma
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}.metric{font-size:28px;font-weight:750}
 .muted{font-size:13px;color:var(--muted)}.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin:15px 0}
 select,input{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:white}
-.tag{padding:7px 9px;border-radius:10px;font-size:12px;font-weight:700}.Good{background:#eaf5ed;color:#3d8a60}.Low{background:#fff4d7;color:#b88420}
-.Need{background:#fbe9e7;color:#b94a45}.Overflow{background:#e7f1f9;color:#467da6}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.tag{padding:7px 9px;border-radius:10px;font-size:12px;font-weight:700}.Good{background:#eaf5ed;color:#3d8a60}.Low{background:#fff4d7;color:#b88420}.Full{background:#e7f1f9;color:#467da6}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 .actions{text-align:right;margin-top:10px}.empty{text-align:center;color:var(--muted);padding:28px}
 .notice{background:#fff7df;border:1px solid #f0dfad;border-radius:12px;padding:12px;font-size:13px}
 .error{background:#fdeceb;border:1px solid #e4b8b5;border-radius:12px;padding:14px;font-size:14px}
@@ -51,8 +50,8 @@ button{font:inherit}
 <div><label class="small">Gender</label><select id="gender"><option>Boys</option><option>Girls</option><option>All / Unisex</option></select></div>
 <div><label class="small">Size</label><select id="size"></select></div>
 <div><label class="small">Season / weight</label><select id="season"></select></div>
-<div><label class="small">Type / style</label><select id="type"></select></div>
-<div><label class="small">Status</label><select id="status"><option>Good</option><option>Low</option><option>Need</option><option>Overflow</option></select></div>
+<div id="typeField"><label class="small">Type / style</label><select id="type"></select></div>
+<div><label class="small">Status</label><select id="status"><option>Low</option><option>Good</option><option>Full</option></select></div>
 <div class="full"><label class="small">Tote / location</label><input id="tote"></div>
 <div class="full"><label class="small">Notes</label><input id="notes"></div>
 </div>
@@ -115,18 +114,18 @@ function render(){
 function list(){
   const g=$("fg")?.value||"All genders",s=$("fs")?.value||"All sizes",w=$("fw")?.value||"All seasons/weights";
   const a=rows.filter(x=>x.section===current&&(g==="All genders"||x.gender===g)&&(s==="All sizes"||x.size===s)&&(w==="All seasons/weights"||x.season_or_weight===w));
-  $("list").innerHTML=a.length?a.map(x=>'<div class="card"><div class="row"><strong>'+safe(x.gender)+" · "+safe(x.size)+"</strong>"+tag(x.status)+'</div><div class="muted">'+safe(x.season_or_weight)+" · "+safe(x.item_type)+'</div><div class="muted">📦 '+safe(x.tote_location)+'</div><div class="muted">📝 '+safe(x.notes)+'</div><div class="actions"><button class="btn" onclick="openEditor(\''+safe(x.id)+"')\">Edit</button> <button class=\"btn\" onclick=\"removeRow('"+safe(x.id)+"')\">Delete</button></div></div>").join(""):'<div class="empty">No entries yet.</div>';
+  $("list").innerHTML=a.length?a.map(x=>'<div class="card"><div class="row"><strong>'+safe(x.gender)+" · "+safe(x.size)+"</strong>"+tag(x.status)+'</div><div class="muted">'+safe(x.season_or_weight)+(x.section==='Clothing'?'':' · '+safe(x.item_type))+'</div><div class="muted">📦 '+safe(x.tote_location)+'</div><div class="muted">📝 '+safe(x.notes)+'</div><div class="actions"><button class="btn" onclick="openEditor(\''+safe(x.id)+"')\">Edit</button> <button class=\"btn\" onclick=\"removeRow('"+safe(x.id)+"')\">Delete</button></div></div>").join(""):'<div class="empty">No entries yet.</div>';
 }
 
 function dash(){
-  const needs=rows.filter(x=>x.status==="Need"||x.status==="Low"),over=rows.filter(x=>x.status==="Overflow");
+  const needs=rows.filter(x=>x.status==="Low"),full=rows.filter(x=>x.status==="Full");
   $("app").innerHTML='<div class="top"><div><h2>Welcome</h2><div class="sub">One shared view for every volunteer.</div></div><button class="btn primary" id="add">＋ Add</button></div>'+
-  '<div class="grid">'+["Good","Low","Need","Overflow"].map(s=>'<div class="card"><div class="metric">'+rows.filter(x=>x.status===s).length+'</div><div class="muted">'+s+"</div></div>").join("")+'</div><h2>🚨 What we need</h2>'+summary(needs,"Nothing marked Low or Need. 🎉")+'<h2>🔵 Overflow</h2>'+summary(over,"Nothing marked Overflow.");
+  '<div class="grid">'+["Low","Good","Full"].map(s=>'<div class="card"><div class="metric">'+rows.filter(x=>x.status===s).length+'</div><div class="muted">'+s+"</div></div>").join("")+'</div><h2>🚨 Low inventory</h2>'+summary(needs,"Nothing marked Low. 🎉")+'<h2>🔵 Full inventory</h2>'+summary(full,"Nothing marked Full.");
   $("add").onclick=()=>openEditor();
 }
 
 function summary(a,empty){
-  return a.length?a.map(x=>'<div class="card"><div class="row"><strong>'+safe(x.section)+" · "+safe(x.gender)+" · "+safe(x.size)+"</strong>"+tag(x.status)+'</div><div class="muted">'+safe(x.season_or_weight)+" · "+safe(x.item_type)+" · 📦 "+safe(x.tote_location)+"</div></div>").join(""):'<div class="empty">'+empty+"</div>";
+  return a.length?a.map(x=>'<div class="card"><div class="row"><strong>'+safe(x.section)+" · "+safe(x.gender)+" · "+safe(x.size)+"</strong>"+tag(x.status)+'</div><div class="muted">'+safe(x.season_or_weight)+(x.section==='Clothing'?'':' · '+safe(x.item_type))+" · 📦 "+safe(x.tote_location)+"</div></div>").join(""):'<div class="empty">'+empty+"</div>";
 }
 
 function options(item){
@@ -134,6 +133,7 @@ function options(item){
   $("size").innerHTML=c.s.map(x=>"<option>"+safe(x)+"</option>").join("");
   $("season").innerHTML=c.w.map(x=>"<option>"+safe(x)+"</option>").join("");
   $("type").innerHTML=c.t.map(x=>"<option>"+safe(x)+"</option>").join("");
+  $("typeField").style.display=$("section").value==="Clothing"?"none":"block";
   if(item){$("size").value=item.size;$("season").value=item.season_or_weight;$("type").value=item.item_type;}
 }
 
@@ -145,7 +145,7 @@ function openEditor(id){
   $("section").value=item?.section||(current==="Dashboard"?"Clothing":current);
   options(item);
   $("gender").value=item?.gender||"Boys";
-  $("status").value=item?.status||"Good";
+  $("status").value=item?.status==="Need"?"Low":item?.status==="Overflow"?"Full":(item?.status||"Good");
   $("tote").value=item?.tote_location||"";
   $("notes").value=item?.notes||"";
   $("editor").showModal();
@@ -155,7 +155,7 @@ $("section").onchange=()=>options();
 $("cancel").onclick=()=>$("editor").close();
 
 $("save").onclick=async()=>{
-  const p={section:$("section").value,gender:$("gender").value,size:$("size").value,season_or_weight:$("season").value,item_type:$("type").value,status:$("status").value,tote_location:$("tote").value,notes:$("notes").value,updated_at:new Date().toISOString()};
+  const p={section:$("section").value,gender:$("gender").value,size:$("size").value,season_or_weight:$("season").value,item_type:$("section").value==="Clothing"?"":$("type").value,status:$("status").value,tote_location:$("tote").value,notes:$("notes").value,updated_at:new Date().toISOString()};
   try{
     const r=editId?await db.from("inventory").update(p).eq("id",editId):await db.from("inventory").insert(p);
     if(r.error){alert(r.error.message);return;}
