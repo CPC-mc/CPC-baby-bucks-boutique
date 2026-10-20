@@ -18,7 +18,7 @@ h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minma
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}.metric{font-size:28px;font-weight:750}
 .muted{font-size:13px;color:var(--muted)}.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin:15px 0}
 select,input{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:white}
-.tag{padding:7px 9px;border-radius:10px;font-size:12px;font-weight:700}.Good{background:#eaf5ed;color:#3d8a60}.Low{background:#fff4d7;color:#b88420}.Full{background:#e7f1f9;color:#467da6}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.tag{padding:7px 9px;border-radius:10px;font-size:12px;font-weight:700}.Need{background:#fbe9e7;color:#b94a45}.Good{background:#eaf5ed;color:#3d8a60}.Low{background:#fff4d7;color:#b88420}.Full{background:#e7f1f9;color:#467da6}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 .actions{text-align:right;margin-top:10px}.empty{text-align:center;color:var(--muted);padding:28px}
 .notice{background:#fff7df;border:1px solid #f0dfad;border-radius:12px;padding:12px;font-size:13px}
 .error{background:#fdeceb;border:1px solid #e4b8b5;border-radius:12px;padding:14px;font-size:14px}
@@ -51,7 +51,7 @@ button{font:inherit}
 <div><label class="small">Size</label><select id="size"></select></div>
 <div><label class="small">Season / weight</label><select id="season"></select></div>
 <div id="typeField"><label class="small">Type / style</label><select id="type"></select></div>
-<div><label class="small">Status</label><select id="status"><option>Low</option><option>Good</option><option>Full</option></select></div>
+<div><label class="small">Status</label><select id="status"><option>Need</option><option>Low</option><option>Good</option><option>Full</option></select></div>
 <div class="full"><label class="small">Tote / location</label><input id="tote"></div>
 <div class="full"><label class="small">Notes</label><input id="notes"></div>
 </div>
@@ -118,9 +118,9 @@ function list(){
 }
 
 function dash(){
-  const needs=rows.filter(x=>x.status==="Low"),full=rows.filter(x=>x.status==="Full");
+  const needs=rows.filter(x=>x.status==="Need"),low=rows.filter(x=>x.status==="Low"),full=rows.filter(x=>x.status==="Full");
   $("app").innerHTML='<div class="top"><div><h2>Welcome</h2><div class="sub">One shared view for every volunteer.</div></div><button class="btn primary" id="add">＋ Add</button></div>'+
-  '<div class="grid">'+["Low","Good","Full"].map(s=>'<div class="card"><div class="metric">'+rows.filter(x=>x.status===s).length+'</div><div class="muted">'+s+"</div></div>").join("")+'</div><h2>🚨 Low inventory</h2>'+summary(needs,"Nothing marked Low. 🎉")+'<h2>🔵 Full inventory</h2>'+summary(full,"Nothing marked Full.");
+  '<div class="grid">'+["Need","Low","Good","Full"].map(s=>'<div class="card"><div class="metric">'+rows.filter(x=>x.status===s).length+'</div><div class="muted">'+s+"</div></div>").join("")+'</div><h2>🔴 Need</h2>'+summary(needs,"Nothing marked Need. 🎉")+'<h2>🟡 Low inventory</h2>'+summary(low,"Nothing marked Low. 🎉")+'<h2>🔵 Full inventory</h2>'+summary(full,"Nothing marked Full.");
   $("add").onclick=()=>openEditor();
 }
 
@@ -145,7 +145,7 @@ function openEditor(id){
   $("section").value=item?.section||(current==="Dashboard"?"Clothing":current);
   options(item);
   $("gender").value=item?.gender||"Boys";
-  $("status").value=item?.status==="Need"?"Low":item?.status==="Overflow"?"Full":(item?.status||"Good");
+  $("status").value=item?.status==="Overflow"?"Full":(item?.status||"Good");
   $("tote").value=item?.tote_location||"";
   $("notes").value=item?.notes||"";
   $("editor").showModal();
