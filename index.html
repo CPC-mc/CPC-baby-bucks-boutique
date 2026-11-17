@@ -47,9 +47,9 @@ button{font:inherit}
 <h2 id="editorTitle">Add inventory</h2>
 <div class="form">
 <div class="full"><label class="small">Section</label><select id="section"></select></div>
-<div><label class="small">Gender</label><select id="gender"><option>Boys</option><option>Girls</option><option>All / Unisex</option></select></div>
-<div><label class="small">Size</label><select id="size"></select></div>
-<div><label class="small">Season / weight</label><select id="season"></select></div>
+<div id="genderField"><label class="small">Gender</label><select id="gender"><option>Boys</option><option>Girls</option><option>All / Unisex</option></select></div>
+<div id="sizeField"><label class="small">Size</label><select id="size"></select></div>
+<div id="seasonField"><label class="small">Season / weight</label><select id="season"></select></div>
 <div id="typeField"><label class="small">Type / style</label><select id="type"></select></div>
 <div><label class="small">Status</label><select id="status"><option>Need</option><option>Low</option><option>Good</option><option>Full</option></select></div>
 <div class="full"><label class="small">Tote / location</label><input id="tote"></div>
@@ -71,7 +71,7 @@ const cfg={
 "Clothing":{s:["NB","0–3M","3M","6M","9M","12M","18M","2T","3T","4T","5T"],w:["Summer","Winter"],t:["Tops","Bottoms","Outfits / Dresses"]},
 "Onesies":{s:["NB","0–3M","3–6M","6–9M","12–24M"],w:["All"],t:["Short Sleeve","Long Sleeve"]},
 "Sleepers":{s:["NB","0–3M","3M","6M","9M","12M","18M","2T","3T","4T","5T"],w:["Lightweight","Heavyweight"],t:["Sleepers"]},
-"Baby Essentials":{s:["Not size-specific"],w:["All"],t:["Shampoo","Lotion","Ointment","Diaper Cream","Baby Wash","Wipes","Diapers","Bottles","Pacifiers","Blankets","Bibs","Other"]},
+"Baby Essentials":{s:[""],w:[""],t:["Shampoo","Lotion","Baby wash","Diaper cream","Baby bottles","Pacifiers","Baby food","Baby cereal"]},
 "Maternity Clothes":{s:["XS","S","M","L","XL","2XL","3XL"],w:["Summer","Winter"],t:["Tops","Bottoms"]}
 };
 const sections=Object.keys(cfg);
@@ -102,12 +102,13 @@ function render(){
   nav();
   if(current==="Dashboard"){dash();return;}
   const c=cfg[current];
+  const baby=current==="Baby Essentials";
   $("app").innerHTML='<div class="top"><div><h2>'+safe(current)+'</h2><div class="sub">Track status, not individual quantities.</div></div><button class="btn primary" id="add">＋ Add</button></div>'+
-  '<div class="filters"><select id="fg"><option>All genders</option><option>Boys</option><option>Girls</option><option>All / Unisex</option></select>'+
+  (baby?'':'<div class="filters"><select id="fg"><option>All genders</option><option>Boys</option><option>Girls</option><option>All / Unisex</option></select>'+
   '<select id="fs"><option>All sizes</option>'+c.s.map(x=>"<option>"+safe(x)+"</option>").join("")+'</select>'+
-  '<select id="fw"><option>All seasons/weights</option>'+[...new Set(c.w)].map(x=>"<option>"+safe(x)+"</option>").join("")+'</select></div><div id="list"></div>';
+  '<select id="fw"><option>All seasons/weights</option>'+[...new Set(c.w)].map(x=>"<option>"+safe(x)+"</option>").join("")+'</select></div>')+'<div id="list"></div>';
   $("add").onclick=()=>openEditor();
-  ["fg","fs","fw"].forEach(id=>$(id).onchange=list);
+  if(!baby)["fg","fs","fw"].forEach(id=>$(id).onchange=list);
   list();
 }
 
@@ -133,6 +134,10 @@ function options(item){
   $("size").innerHTML=c.s.map(x=>"<option>"+safe(x)+"</option>").join("");
   $("season").innerHTML=c.w.map(x=>"<option>"+safe(x)+"</option>").join("");
   $("type").innerHTML=c.t.map(x=>"<option>"+safe(x)+"</option>").join("");
+  const baby=$("section").value==="Baby Essentials";
+  $("genderField").style.display=baby?"none":"block";
+  $("sizeField").style.display=baby?"none":"block";
+  $("seasonField").style.display=baby?"none":"block";
   $("typeField").style.display=$("section").value==="Clothing"?"none":"block";
   if(item){$("size").value=item.size;$("season").value=item.season_or_weight;$("type").value=item.item_type;}
 }
@@ -155,7 +160,8 @@ $("section").onchange=()=>options();
 $("cancel").onclick=()=>$("editor").close();
 
 $("save").onclick=async()=>{
-  const p={section:$("section").value,gender:$("gender").value,size:$("size").value,season_or_weight:$("season").value,item_type:$("section").value==="Clothing"?"":$("type").value,status:$("status").value,tote_location:$("tote").value,notes:$("notes").value,updated_at:new Date().toISOString()};
+  const baby=$("section").value==="Baby Essentials";
+  const p={section:$("section").value,gender:baby?"":$("gender").value,size:baby?"":$("size").value,season_or_weight:baby?"":$("season").value,item_type:$("section").value==="Clothing"?"":$("type").value,status:$("status").value,tote_location:$("tote").value,notes:$("notes").value,updated_at:new Date().toISOString()};
   try{
     const r=editId?await db.from("inventory").update(p).eq("id",editId):await db.from("inventory").insert(p);
     if(r.error){alert(r.error.message);return;}
